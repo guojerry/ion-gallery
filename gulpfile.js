@@ -9,6 +9,11 @@ var ngAnnotate = require('gulp-ng-annotate');
 var stripDebug = require('gulp-strip-debug');
 var del = require('del');
 var karma = require('karma').server;
+var autoprefixer = require('gulp-autoprefixer');
+
+var autoprefixerOptions = {
+	  browsers: ['ios >= 7', 'android >= 4.0']
+};
 
 gulp.task('default', ['compress','sass'], function() {
   del(['.tmp/'], function (err, paths) {
@@ -60,6 +65,7 @@ gulp.task('compress',['scripts'], function() {
 gulp.task('sass', function () {
     gulp.src('./src/scss/*.scss')
         .pipe(sass({outputStyle: 'compressed'}))
+				.pipe(autoprefixer(autoprefixerOptions))
         .pipe(gulp.dest('./dist'));
 });
  

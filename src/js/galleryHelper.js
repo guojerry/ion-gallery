@@ -8,7 +8,7 @@
   ionGalleryHelper.$inject = ['ionGalleryConfig'];
   
   function ionGalleryHelper(ionGalleryConfig) {
-    
+    /*jshint validthis: true */
     this.getRowSize = function(size,length){
       var rowSize;
       

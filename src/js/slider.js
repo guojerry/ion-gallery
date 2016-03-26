@@ -5,9 +5,9 @@
     .module('ion-gallery')
     .directive('ionSlider',ionSlider);
 
-  ionSlider.$inject = ['$ionicModal','ionGalleryHelper','$ionicPlatform','$timeout','$ionicScrollDelegate'];
+  ionSlider.$inject = ['$ionicModal','ionGalleryHelper','$ionicPlatform','$timeout','$ionicScrollDelegate', '$ionicLoading'];
 
-  function ionSlider($ionicModal,ionGalleryHelper,$ionicPlatform,$timeout,$ionicScrollDelegate){
+  function ionSlider($ionicModal,ionGalleryHelper,$ionicPlatform,$timeout,$ionicScrollDelegate, $ionicLoading){
     
     return {
       restrict: 'A',
@@ -24,10 +24,12 @@
           
       $scope.selectedSlide = 1;
       $scope.hideAll = false;
+      $scope.displayIndex = 1;
       
       $scope.showImage = function(index) {
         $scope.slides = [];
         currentImage = index;
+        $scope.displayIndex = index+1;
 
         var galleryLength = $scope.ionGalleryItems.length;
         var previndex = index - 1 < 0 ? galleryLength - 1 : index - 1;
@@ -85,12 +87,39 @@
         $scope.slides[slideToLoad] = $scope.ionGalleryItems[imageToLoad];
 
         lastSlideIndex = currentSlideIndex;
+        $scope.displayIndex = currentImage+1;
       };
       
+      $scope.saveImage = function() {
+        var success = function(){
+            $ionicLoading.show({
+                noBackdrop: true,
+                template: '保存成功',
+                duration: 1500
+            });
+        };
+
+        var error = function(){
+            $ionicLoading.show({
+                noBackdrop: true,
+                template: '保存失败',
+                duration: 1500
+            });
+        };
+
+        $ionicLoading.show({
+            noBackdrop: true,
+            template: '保存图片',
+            duration: 999900
+        });
+        
+        _saveImageToPhone($scope.ionGalleryItems[currentImage].src, success, error);
+      };
+
       $scope.$on('ZoomStarted', function(e){
         $timeout(function () {
           zoomStart = true;
-          $scope.hideAll = true;
+          //$scope.hideAll = true;
         });
         
       });
@@ -124,24 +153,58 @@
         if(($scope.hasOwnProperty('ionSliderToggle') && $scope.ionSliderToggle === false && $scope.hideAll === false) || zoomStart === true){
           return;
         }
+
+        $scope.closeModal();
         
-        $scope.hideAll = !$scope.hideAll;
+        //$scope.hideAll = !$scope.hideAll;
       };
       
       var _onDoubleTap = function _onDoubleTap(position){
         if(zoomStart === false){
           $ionicScrollDelegate.$getByHandle('slide-'+lastSlideIndex).zoomTo(3,true,position.x,position.y);
           zoomStart = true;
-          $scope.hideAll = true;
+          //$scope.hideAll = true;
         }
         else{
           _onTap();
         }
       };
+
+      var _saveImageToPhone = function _saveImageToPhone(url, success, error) {
+        var canvas, context, imageDataUrl, imageData;
+        var img = new Image();
+        img.onload = function() {
+            canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            context = canvas.getContext('2d');
+            context.drawImage(img, 0, 0);
+            try {
+                imageDataUrl = canvas.toDataURL('image/jpeg', 1.0);
+                imageData = imageDataUrl.replace(/data:image\/jpeg;base64,/, '');
+                cordova.exec(
+                    success,
+                    error,
+                    'Canvas2ImagePlugin',
+                    'saveImageDataToLibrary',
+                    [imageData]
+                );
+            }
+            catch (e) {
+                error(e.message);
+            }
+        };
+        try {
+            img.src = url;
+        }
+        catch(e) {
+            error(e.message);
+        }
+      };
       
       function _isOriginalSize(){
         zoomStart = false;
-        _onTap();
+        //_onTap();
       }
       
     }

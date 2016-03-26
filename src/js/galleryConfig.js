@@ -8,8 +8,9 @@
   ionGalleryConfig.$inject = [];
 
   function ionGalleryConfig(){
+    /*jshint validthis: true */
     this.config = {
-      action_label: 'Done',
+      action_label: '关闭',
       toggle: true,
       row_size: 3,
       fixed_row_size: true
